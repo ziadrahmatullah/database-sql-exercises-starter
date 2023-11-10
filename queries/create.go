@@ -3,7 +3,7 @@ package queries
 import (
 	"database-sql-exercises/entity"
 	"database/sql"
-	"fmt"
+	"log"
 
 	"github.com/shopspring/decimal"
 )
@@ -12,9 +12,11 @@ func CreateProduct(db *sql.DB, name string, stock int, productCategoryId int64, 
 
 	var product entity.Product
 
-	sql := fmt.Sprintf("INSERT INTO products (name, stock, price, category_id, created_at, updated_at) VALUES (%s, %d, %d, %d, NOW(), NOW()) RETURNING id", name, stock, price, productCategoryId)
-
-	err := db.QueryRow(sql).Scan(&product.Id)
+	stmt, err := db.Prepare("INSERT INTO products (category_id, name, stock, price, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING id")
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = stmt.Exec(productCategoryId, name, stock, price)
 	if err != nil {
 		return nil, err
 	}
